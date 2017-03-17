@@ -142,9 +142,102 @@ class BTree:
     def find(self, key):
         return self._find(key, self.root)
         
+        
+    
+    def _find_predecessor(self, key, node):
+        pass
+    
+    def _find_succesor(self, key, node):
+        pass
+    
+    def _delete_key_leaf(self, key, node, pos):
+        pass
+        
+    def _merge_children_deleted_key(self, key, node, pos):
+        pass
+        
+    def _move_node_from_left_child(self, node, pos):
+        pass
+    
+    def _move_node_from_right_child(self, node, pos):
+        pass
+    
+    def _merge_node_with_left_sibbling(self, node, pos):
+        pass
+    
+    def _merge_node_with_right_sibbling(self, node, pos):
+        pass
+    
+    
     def _delete(self, key, node):
         if node is None: return
-        pass
+        
+        
+        b = 0
+        e = len(node.sons) - 1
+        while b < e:
+            mid = (b + e + 1) // 2
+            if mid == 0: # mid is never 0 actually
+                pass
+            elif node.keys[mid - 1] <= key:
+                b = mid
+            else:
+                e = mid - 1
+        
+        
+        # the key to delete is here
+        if mid > 0 and node.keys[mid - 1] == key:
+            
+            # this node is a leaf
+            if node.sons[mid] is None:
+                self._delete_key_leaf(key, node, mid - 1)
+            # left child node has enough keys
+            elif len(node.sons[mid - 1].keys) >= self.t:
+                kp = _find_predecessor(key, node.sons[mid - 1])
+                node.keys[mid - 1] = kp
+                self._delete(kp, node.sons[mid - 1])
+            # right child node has enough keys
+            elif len(node.sons[mid].keys) >= self.t:
+                kp = _find_succesor(key, node.sons[mid])
+                node.keys[mid] = kp
+                self._delete(kp, node.sons[mid])
+            # both children have minimal number of keys, must combine them
+            else:
+                self._merge_children_deleted_key(key, node, mid - 1)
+        else:
+            
+            # we are on a leave and haven't found the key, we have nothing to do
+            if node.sons[mid] is None:
+                pass
+            # the amount of keys in the child is enough, simply recurse
+            elif len(node.sons[mid].keys) >= self.t:
+                self._delete(key, node.sons[mid])
+            # we must push a key to the child
+            else:
+                # left sibbling has enough keys
+                if mid > 0 and len(node.sons[mid - 1].keys) >= self.t:
+                    self._move_node_from_left_child(node, mid)
+                    self._delete(key, node.sons[mid])
+                # right sibbling has enough keys
+                elif mid < len(node.sons) - 1 and len(node.sons[mid + 1].keys) >= self.t:
+                    self._move_node_from_right_child(node, mid)
+                    self._delete(key, node.sons[mid])
+                # must merge with one of sibblings
+                else:
+                    
+                    if mid > 0:
+                        self._merge_node_with_left_sibbling(node, mid)
+                        self._delete(key, node.sons[mid - 1])
+                    elif mid < len(node.sons) - 1:
+                        self._merge_node_with_right_sibbling(node, mid)
+                        self._delete(key, node.sons[mid])
+                    # this shouldn't be possible
+                    else:
+                        assert 1 == 0
+                
+                
+                
+
         
     def delete(self, key):
         self._delete(key, self.root)
