@@ -12,6 +12,19 @@ class BTree:
 
         def __repr__(self):
             return 'Node' + str(self.keys) + str(self.sons)
+        
+        def _lower_bound(self, key):
+            b = 0
+            e = len(self.sons) - 1
+            while b < e:
+                mid = (b + e + 1) // 2
+                if mid == 0: # mid is never 0 actually
+                    pass
+                elif self.keys[mid - 1] <= key:
+                    b = mid
+                else:
+                    e = mid - 1
+            return b
 
     def __init__(self, t):
         self.root = self.Node()
@@ -83,33 +96,25 @@ class BTree:
             return
         
         
-        b = 0
-        e = len(node.sons) - 1
-        while b < e:
-            mid = (b + e + 1) // 2
-            if mid == 0: # mid is never 0 actually
-                pass
-            elif node.keys[mid - 1] <= key:
-                b = mid
-            else:
-                e = mid - 1
+        pos = node._lower_bound(key)
+
         
         # we are in a leaf
-        if node.sons[b] is None:
-            node.keys = node.keys[:b] + [key] + node.keys[b:]
+        if node.sons[pos] is None:
+            node.keys = node.keys[:pos] + [key] + node.keys[pos:]
             node.sons.append(None)
         else:
             
             # son is full, doing split from here
-            if node.sons[b] is not None and len(node.sons[b].keys) == 2 * self.t - 1:
-                self._split(node.sons[b], node, b)
+            if node.sons[pos] is not None and len(node.sons[pos].keys) == 2 * self.t - 1:
+                self._split(node.sons[pos], node, pos)
                 # go to right
-                if node.keys[b] <= key:
-                    self._insert(key, node.sons[b + 1], node)
+                if node.keys[pos] <= key:
+                    self._insert(key, node.sons[pos + 1], node)
                 else:
-                    self._insert(key, node.sons[b], node)
+                    self._insert(key, node.sons[pos], node)
             else:
-                self._insert(key, node.sons[b], node)
+                self._insert(key, node.sons[pos], node)
 
     
     
@@ -122,21 +127,13 @@ class BTree:
             return None
         
         
-        b = 0
-        e = len(node.sons) - 1
-        while b < e:
-            mid = (b + e + 1) // 2
-            if mid == 0: # mid is never 0 actually
-                pass
-            elif node.keys[mid - 1] <= key:
-                b = mid
-            else:
-                e = mid - 1
+        pos = node._lower_bound(key)
+
         
-        if b >= 1 and node.keys[b - 1] == key:
+        if pos >= 1 and node.keys[pos - 1] == key:
             return node
-        
-        return self._find(key, node.sons[b])
+        else:
+            return self._find(key, node.sons[pos])
          
          
     def find(self, key):
@@ -173,64 +170,55 @@ class BTree:
         if node is None: return
         
         
-        b = 0
-        e = len(node.sons) - 1
-        while b < e:
-            mid = (b + e + 1) // 2
-            if mid == 0: # mid is never 0 actually
-                pass
-            elif node.keys[mid - 1] <= key:
-                b = mid
-            else:
-                e = mid - 1
+        pos = node._lower_bound(key)
         
         
         # the key to delete is here
-        if mid > 0 and node.keys[mid - 1] == key:
+        if pos > 0 and node.keys[pos - 1] == key:
             
             # this node is a leaf
-            if node.sons[mid] is None:
-                self._delete_key_leaf(key, node, mid - 1)
+            if node.sons[pos] is None:
+                self._delete_key_leaf(key, node, pos - 1)
             # left child node has enough keys
-            elif len(node.sons[mid - 1].keys) >= self.t:
-                kp = _find_predecessor(key, node.sons[mid - 1])
-                node.keys[mid - 1] = kp
-                self._delete(kp, node.sons[mid - 1])
+            elif len(node.sons[pos - 1].keys) >= self.t:
+                kp = _find_predecessor(key, node.sons[pos - 1])
+                node.keys[pos - 1] = kp
+                self._delete(kp, node.sons[pos - 1])
             # right child node has enough keys
-            elif len(node.sons[mid].keys) >= self.t:
-                kp = _find_succesor(key, node.sons[mid])
-                node.keys[mid] = kp
-                self._delete(kp, node.sons[mid])
+            elif len(node.sons[pos].keys) >= self.t:
+                kp = _find_succesor(key, node.sons[pos])
+                node.keys[pos] = kp
+                self._delete(kp, node.sons[pos])
             # both children have minimal number of keys, must combine them
             else:
-                self._merge_children_deleted_key(key, node, mid - 1)
+                self._merge_children_deleted_key(key, node, pos - 1)
         else:
             
             # we are on a leave and haven't found the key, we have nothing to do
-            if node.sons[mid] is None:
+            if node.sons[pos] is None:
                 pass
             # the amount of keys in the child is enough, simply recurse
-            elif len(node.sons[mid].keys) >= self.t:
-                self._delete(key, node.sons[mid])
+            elif len(node.sons[pos].keys) >= self.t:
+                self._delete(key, node.sons[pos])
             # we must push a key to the child
             else:
                 # left sibbling has enough keys
-                if mid > 0 and len(node.sons[mid - 1].keys) >= self.t:
-                    self._move_node_from_left_child(node, mid)
-                    self._delete(key, node.sons[mid])
+                if pos > 0 and len(node.sons[pos - 1].keys) >= self.t:
+                    self._move_node_from_left_child(node, pos)
+                    self._delete(key, node.sons[pos])
                 # right sibbling has enough keys
-                elif mid < len(node.sons) - 1 and len(node.sons[mid + 1].keys) >= self.t:
-                    self._move_node_from_right_child(node, mid)
-                    self._delete(key, node.sons[mid])
+                elif pos < len(node.sons) - 1 and len(node.sons[pos + 1].keys) >= self.t:
+                    self._move_node_from_right_child(node, pos)
+                    self._delete(key, node.sons[pos])
                 # must merge with one of sibblings
                 else:
                     
-                    if mid > 0:
-                        self._merge_node_with_left_sibbling(node, mid)
-                        self._delete(key, node.sons[mid - 1])
-                    elif mid < len(node.sons) - 1:
-                        self._merge_node_with_right_sibbling(node, mid)
-                        self._delete(key, node.sons[mid])
+                    if pos > 0:
+                        self._merge_node_with_left_sibbling(node, pos)
+                        self._delete(key, node.sons[pos - 1])
+                    elif pos < len(node.sons) - 1:
+                        self._merge_node_with_right_sibbling(node, pos)
+                        self._delete(key, node.sons[pos])
                     # this shouldn't be possible
                     else:
                         assert 1 == 0
