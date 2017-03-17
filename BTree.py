@@ -168,5 +168,5 @@ def main(args):
 
 if __name__ == '__main__':
     import sys
-    sys.setrecursionlimit(10 ** 4)
+    #sys.setrecursionlimit(10 ** 4)
     sys.exit(main(sys.argv))
