@@ -142,28 +142,72 @@ class BTree:
         
     
     def _find_predecessor(self, key, node):
-        pass
+        if node.sons[0] == None:
+            return node.keys[-1]
+        else:
+            return self._find_predecessor(key, node.sons[-1])
     
     def _find_succesor(self, key, node):
-        pass
+        if node.sons[0] == None:
+            return node.keys[0]
+        else:
+            return self._find_predecessor(key, node.sons[0])
     
     def _delete_key_leaf(self, key, node, pos):
-        pass
         
-    def _merge_children_deleted_key(self, key, node, pos):
-        pass
+        # condition for correctness of algorithm
+        assert node == self.root or len(node.sons) >= self.t
+        
+        assert node.keys[pos] == key
+        
+        node.keys = node.keys[:pos] + node.keys[pos + 1:]
+        node.sons.pop()
+        
+        
+    def _merge_children_around_key(self, key, node, pos):
+        
+        assert pos >= 0 and pos < len(node.sons) - 1
+        
+        y = Node()
+        y.sons = node.sons[pos].sons + node.sons[pos + 1].sons
+        y.keys = node.sons[pos].keys + [key] + node.sons[pos + 1].keys
+        
+        node.keys = node.keys[:pos] + node.keys[pos + 1:]
+        node.sons = node.sons[:pos] + [y] + node.sons[pos + 2:]
+        
         
     def _move_node_from_left_child(self, node, pos):
-        pass
+        
+        
+        
+        assert pos > 0 and len(node.sons[pos - 1]) >= self.t
+        
+        
+        node.sons[pos].keys = [node.keys[pos - 1] ] + node.sons[pos].keys
+        node.sons[pos].sons = [ node.sons[pos - 1].sons[-1] ] + node.sons[pos].sons
+        
+        node.keys[pos - 1] = node.sons[pos - 1].keys[-1]
+        
+        node.sons[pos - 1].sons = node.sons[pos - 1].sons[:-1]
+        node.sons[pos - 1].keys = node.sons[pos - 1].keys[:-1]
+        
+
     
     def _move_node_from_right_child(self, node, pos):
-        pass
-    
-    def _merge_node_with_left_sibbling(self, node, pos):
-        pass
-    
-    def _merge_node_with_right_sibbling(self, node, pos):
-        pass
+        
+        
+        assert pos < len(node.sons) - 1 and len(node.sons[pos + 1]) >= self.t
+        
+        
+        node.sons[pos].keys = node.sons[pos].keys + [node.keys[pos + 1] ]
+        node.sons[pos].sons =  node.sons[pos].sons + [ node.sons[pos + 1].sons[0] ] 
+        
+        node.keys[pos + 1] = node.sons[pos + 1].keys[0]
+        
+        node.sons[pos + 1].sons = node.sons[pos + 1].sons[1:]
+        node.sons[pos + 1].keys = node.sons[pos + 1].keys[1:]
+        
+        
         
     def _fix_empty_root(self, node):
         if node == self.root and len(node.sons) == 1:
@@ -198,10 +242,12 @@ class BTree:
                 self._delete(kp, node.sons[pos])
             # both children have minimal number of keys, must combine them
             else:
-                self._merge_children_deleted_key(key, node, pos - 1)
+                self._merge_children_around_key(key, node, pos - 1)
                 
                 # here I should take care of missing root
                 node = self._fix_empty_root(node)
+                
+                self._delete(key, node.sons[pos - 1])
         else:
             
             # we are on a leave and haven't found the key, we have nothing to do
@@ -224,14 +270,14 @@ class BTree:
                 else:
                     
                     if pos > 0:
-                        self._merge_node_with_left_sibbling(node, pos)
+                        self._merge_children_around_key(key, node, pos - 1)
                         
                         # here I should take care of missing root
                         node = self._fix_empty_root(node)
                         
                         self._delete(key, node.sons[pos - 1])
                     elif pos < len(node.sons) - 1:
-                        self._merge_node_with_right_sibbling(node, pos)
+                        self._merge_children_around_key(key, node, pos)
                         
                         # here I should take care of missing root
                         node = self._fix_empty_root(node)
@@ -239,7 +285,7 @@ class BTree:
                         self._delete(key, node.sons[pos])
                     # this shouldn't be possible
                     else:
-                        assert 1 == 0
+                        assert False
                 
                 
                 
