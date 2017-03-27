@@ -168,9 +168,9 @@ class BTree:
         
         assert pos >= 0 and pos < len(node.sons) - 1
         
-        y = Node()
+        y = self.Node()
         y.sons = node.sons[pos].sons + node.sons[pos + 1].sons
-        y.keys = node.sons[pos].keys + [key] + node.sons[pos + 1].keys
+        y.keys = node.sons[pos].keys + [node.keys[pos]] + node.sons[pos + 1].keys
         
         node.keys = node.keys[:pos] + node.keys[pos + 1:]
         node.sons = node.sons[:pos] + [y] + node.sons[pos + 2:]
@@ -196,13 +196,13 @@ class BTree:
     def _move_node_from_right_child(self, node, pos):
         
         
-        assert pos < len(node.sons) - 1 and len(node.sons[pos + 1]) >= self.t
+        assert pos < len(node.sons) - 1 and len(node.sons[pos + 1].keys) >= self.t
         
         
-        node.sons[pos].keys = node.sons[pos].keys + [node.keys[pos + 1] ]
+        node.sons[pos].keys = node.sons[pos].keys + [node.keys[pos] ]
         node.sons[pos].sons =  node.sons[pos].sons + [ node.sons[pos + 1].sons[0] ] 
         
-        node.keys[pos + 1] = node.sons[pos + 1].keys[0]
+        node.keys[pos] = node.sons[pos + 1].keys[0]
         
         node.sons[pos + 1].sons = node.sons[pos + 1].sons[1:]
         node.sons[pos + 1].keys = node.sons[pos + 1].keys[1:]
@@ -275,14 +275,14 @@ class BTree:
                         # here I should take care of missing root
                         node = self._fix_empty_root(node)
                         
-                        self._delete(key, node.sons[pos - 1])
+                        self._delete(key, node)
                     elif pos < len(node.sons) - 1:
                         self._merge_children_around_key(key, node, pos)
                         
                         # here I should take care of missing root
                         node = self._fix_empty_root(node)
                         
-                        self._delete(key, node.sons[pos])
+                        self._delete(key, node)
                     # this shouldn't be possible
                     else:
                         assert False
@@ -295,11 +295,7 @@ class BTree:
         self._delete(key, self.root)
         
 
-from random import shuffle
-def main(args):
-    '''
-    Testing BTree Implementation
-    '''
+def dummy_test0():
     T = BTree(6)
     rng = list(range(9000))
     shuffle(rng)
@@ -309,6 +305,35 @@ def main(args):
     
     for i in range(9):
         print(T.find(i), '\n')
+
+def dummy_test1():
+    T = BTree(3)
+    for i in range(6):
+        T.insert(i)
+    print(T.root)
+    T.delete(5)
+    print(T.root)
+    T.delete(4)
+    print(T.root)
+    T.insert(100)
+    T.insert(101)
+    T.insert(3)
+    T.insert(3)
+    T.insert(3)
+    print(T.root)
+    T.delete(1)
+    print(T.root)
+    
+def dummy_tests():
+    dummy_test1()
+
+from random import shuffle
+def main(args):
+    '''
+    Testing BTree Implementation
+    '''
+    
+    dummy_tests()
     return 0
 
 if __name__ == '__main__':
