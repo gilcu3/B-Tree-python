@@ -164,6 +164,13 @@ class BTree:
     
     def _merge_node_with_right_sibbling(self, node, pos):
         pass
+        
+    def _fix_empty_root(self, node):
+        if node == self.root and len(node.sons) == 1:
+            self.root = node.sons[0]
+            return self.root
+        else:
+            return node
     
     
     def _delete(self, key, node):
@@ -192,6 +199,9 @@ class BTree:
             # both children have minimal number of keys, must combine them
             else:
                 self._merge_children_deleted_key(key, node, pos - 1)
+                
+                # here I should take care of missing root
+                node = self._fix_empty_root(node)
         else:
             
             # we are on a leave and haven't found the key, we have nothing to do
@@ -215,9 +225,17 @@ class BTree:
                     
                     if pos > 0:
                         self._merge_node_with_left_sibbling(node, pos)
+                        
+                        # here I should take care of missing root
+                        node = self._fix_empty_root(node)
+                        
                         self._delete(key, node.sons[pos - 1])
                     elif pos < len(node.sons) - 1:
                         self._merge_node_with_right_sibbling(node, pos)
+                        
+                        # here I should take care of missing root
+                        node = self._fix_empty_root(node)
+                        
                         self._delete(key, node.sons[pos])
                     # this shouldn't be possible
                     else:
