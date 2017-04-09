@@ -151,7 +151,7 @@ class BTree:
         if node.sons[0] == None:
             return node.keys[0]
         else:
-            return self._find_predecessor(key, node.sons[0])
+            return self._find_succesor(key, node.sons[0])
     
     def _delete_key_leaf(self, key, node, pos):
         
@@ -237,8 +237,8 @@ class BTree:
                 self._delete(kp, node.sons[pos - 1])
             # right child node has enough keys
             elif len(node.sons[pos].keys) >= self.t:
-                kp = _find_succesor(key, node.sons[pos])
-                node.keys[pos] = kp
+                kp = self._find_succesor(key, node.sons[pos])
+                node.keys[pos - 1] = kp
                 self._delete(kp, node.sons[pos])
             # both children have minimal number of keys, must combine them
             else:
@@ -308,7 +308,7 @@ def dummy_test0():
 
 def dummy_test1():
     T = BTree(3)
-    for i in range(6):
+    for i in range(9):
         T.insert(i)
     print(T.root)
     T.delete(5)
@@ -325,7 +325,7 @@ def dummy_test1():
     print(T.root)
     
 def dummy_tests():
-    dummy_test1()
+    dummy_test0()
 
 from random import shuffle
 def main(args):
