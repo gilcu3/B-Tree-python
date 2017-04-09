@@ -232,7 +232,7 @@ class BTree:
                 self._delete_key_leaf(key, node, pos - 1)
             # left child node has enough keys
             elif len(node.sons[pos - 1].keys) >= self.t:
-                kp = _find_predecessor(key, node.sons[pos - 1])
+                kp = self._find_predecessor(key, node.sons[pos - 1])
                 node.keys[pos - 1] = kp
                 self._delete(kp, node.sons[pos - 1])
             # right child node has enough keys
