@@ -294,6 +294,51 @@ class BTree:
     def delete(self, key):
         self._delete(key, self.root)
         
+        
+    
+    
+    def _find_all(self, key, node, ans):
+        if node is None: return
+        b = 0
+        e = len(node.sons) - 1
+        while b < e:
+            mid = (b + e + 1) // 2
+            if mid == 0: # mid is never 0 actually
+                pass
+            elif node.keys[mid - 1] < key:
+                b = mid
+            else:
+                e = mid - 1
+        
+        left = b
+        
+        
+        b = 0
+        e = len(node.sons) - 1
+        while b < e:
+            mid = (b + e + 1) // 2
+            if mid == 0: # mid is never 0 actually
+                pass
+            elif node.keys[mid - 1] > key:
+                e = mid - 1
+            else:
+                b = mid
+        right = b
+        
+        for i in range(left, right + 1):
+            self._find_all(key, node.sons[i], ans)
+            
+            if i < right:
+                assert node.keys[i] == key
+                ans.append(node.keys[i])
+        
+    
+    def find_all(self, key):
+        ans = []
+        self._find_all(key, self.root, ans)
+        return ans 
+    
+        
 
 def dummy_test0():
     T = BTree(6)
@@ -324,8 +369,21 @@ def dummy_test1():
     T.delete(1)
     print(T.root)
     
+    
+def dummy_test2():
+    T = BTree(3)
+    for _ in range(10):
+        T.insert(0)
+    T.insert(1)
+    T.insert(2)
+    T.insert(-1)
+    print(T.root)
+    ans = T.find_all(0)
+    print(len(ans), ans)
+
+
 def dummy_tests():
-    dummy_test0()
+    dummy_test2()
 
 from random import shuffle
 def main(args):
