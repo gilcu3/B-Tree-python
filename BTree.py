@@ -123,7 +123,7 @@ class BTree:
     
     
     def _find(self, key, node):
-        if node is None:
+        if node is None or len(node.sons) == 0:
             return None
         
         
@@ -180,7 +180,7 @@ class BTree:
         
         
         
-        assert pos > 0 and len(node.sons[pos - 1]) >= self.t
+        assert pos > 0 and len(node.sons[pos - 1].keys) >= self.t
         
         
         node.sons[pos].keys = [node.keys[pos - 1] ] + node.sons[pos].keys
@@ -218,7 +218,7 @@ class BTree:
     
     
     def _delete(self, key, node):
-        if node is None: return
+        if node is None or len(node.sons) == 0: return
         
         
         pos = node._lower_bound(key)
@@ -247,7 +247,7 @@ class BTree:
                 # here I should take care of missing root
                 node = self._fix_empty_root(node)
                 
-                self._delete(key, node.sons[pos - 1])
+                self._delete(key, node)
         else:
             
             # we are on a leave and haven't found the key, we have nothing to do
@@ -298,7 +298,7 @@ class BTree:
     
     
     def _find_all(self, key, node, ans):
-        if node is None: return
+        if node is None or len(node.sons) == 0: return
         b = 0
         e = len(node.sons) - 1
         while b < e:
@@ -325,7 +325,7 @@ class BTree:
                 b = mid
         right = b
         
-        print(left, right, len(node.sons))
+        # print(left, right, len(node.sons))
         for i in range(left, right + 1):
             self._find_all(key, node.sons[i], ans)
             
@@ -389,32 +389,52 @@ def map_test():
     '''
     It's purpose is to compare againt map implementation
     '''
-    random.seed(0)
-    num_tests = 1000
+    seed = random.randint(0, 1000)
+    print('random seed %d' % seed)
+    # seed = 195
+    random.seed(seed)
+    num_tests = 10000
+    num_ops = 200
+    debug = False
     for deg in range(2, 20):
-        B = BTree(deg)
-        M = collections.defaultdict(int)
-        for _ in range(num_tests):
-            prob = random.random()
-            elem = random.randint(0, 10)
-            if prob < 1 / 3: # insert
-                B.insert(elem)
-                M[elem] += 1
-            elif prob < 1/3 + 1/3: # find
-                r1 = (B.find(elem) == None)
-                r2 = (elem in M)
-                assert r1 == r2
-            elif prob < 1/3 + 1/3 + 1/6: # findall
-                r1 = len(B.find_all(elem))
-                if elem not in M:
-                    r2 = 0
-                else:
-                    r2 = M[elem]
-                assert r1 == r2
-            else: # delete
-                if elem in M and M[elem] > 0:
-                    M[elem] -= 1
-                B.delete(elem)
+        
+        for test in range(num_tests):
+            B = BTree(deg)
+            M = collections.defaultdict(int)
+            if debug: print('Beginning block of tests %d %d' % (deg, test))
+            for _ in range(num_ops):
+                if debug: print(B.root)
+                prob = random.random()
+                elem = random.randint(0, 10)
+                if prob < 1 / 3: # insert
+                    if debug: print('insert %d' % elem)
+                    B.insert(elem)
+                    M[elem] += 1
+                elif prob < 1/3 + 1/3: # find
+                    if debug: print('find %d' % elem)
+                    r1 = (B.find(elem) != None)
+                    r2 = (elem in M and M[elem] > 0)
+                    if r1 != r2:
+                        print(B.root)
+                        print(r1, r2, elem)
+                    assert r1 == r2
+                elif prob < 1/3 + 1/3 + 1/6: # findall
+                    if debug: print('findall %d' % elem)
+                    r1 = len(B.find_all(elem))
+                    if elem not in M:
+                        r2 = 0
+                    else:
+                        r2 = M[elem]
+                    if r1 != r2:
+                        print(B.root)
+                        print(r1, r2, elem)
+                    assert r1 == r2
+                else: # delete
+                    if debug: print('delete %d' % elem)
+                    if elem in M and M[elem] > 0:
+                        M[elem] -= 1
+                    B.delete(elem)
+            if debug: print('Block finished correctly')
 def dummy_tests():
     map_test()
 
