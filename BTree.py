@@ -131,7 +131,7 @@ class BTree:
 
         
         if pos >= 1 and node.keys[pos - 1] == key:
-            return node
+            return node.keys[pos - 1]
         else:
             return self._find(key, node.sons[pos])
          
@@ -325,6 +325,7 @@ class BTree:
                 b = mid
         right = b
         
+        print(left, right, len(node.sons))
         for i in range(left, right + 1):
             self._find_all(key, node.sons[i], ans)
             
@@ -382,10 +383,42 @@ def dummy_test2():
     print(len(ans), ans)
 
 
+import random
+import collections
+def map_test():
+    '''
+    It's purpose is to compare againt map implementation
+    '''
+    random.seed(0)
+    num_tests = 1000
+    for deg in range(2, 20):
+        B = BTree(deg)
+        M = collections.defaultdict(int)
+        for _ in range(num_tests):
+            prob = random.random()
+            elem = random.randint(0, 10)
+            if prob < 1 / 3: # insert
+                B.insert(elem)
+                M[elem] += 1
+            elif prob < 1/3 + 1/3: # find
+                r1 = (B.find(elem) == None)
+                r2 = (elem in M)
+                assert r1 == r2
+            elif prob < 1/3 + 1/3 + 1/6: # findall
+                r1 = len(B.find_all(elem))
+                if elem not in M:
+                    r2 = 0
+                else:
+                    r2 = M[elem]
+                assert r1 == r2
+            else: # delete
+                if elem in M and M[elem] > 0:
+                    M[elem] -= 1
+                B.delete(elem)
 def dummy_tests():
-    dummy_test2()
+    map_test()
 
-from random import shuffle
+
 def main(args):
     '''
     Testing BTree Implementation
