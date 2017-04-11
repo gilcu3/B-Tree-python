@@ -31,9 +31,22 @@ class BTree:
         self.t = t
     
     
+    def _inorder(self, cur):
+        if cur == None: return
+        
+        for i, son in enumerate(cur.sons):
+            if i > 0:
+                yield cur.keys[i - 1]
+            yield from self._inorder(son)
+    
+    
+    def inorder(self):
+        yield from self._inorder(self.root)
+    
     def _preorder(self, cur):
         if cur == None: return
-        yield cur
+        for key in cur.keys:
+            yield key
         for son in cur.sons:
             yield from self._preorder(son)
     
@@ -435,8 +448,19 @@ def map_test():
                         M[elem] -= 1
                     B.delete(elem)
             if debug: print('Block finished correctly')
+            
+
+def walk_test():
+    B = BTree(3)
+    for i in range(10):
+        B.insert(i)
+    print(B.root)
+    print(list(B.preorder()))
+    print(list(B.inorder()))
+    
+
 def dummy_tests():
-    map_test()
+    walk_test()
 
 
 def main(args):
