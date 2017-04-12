@@ -67,20 +67,23 @@ class MainWindow(QWidget):
         graph = pydot.Dot(graph_type='digraph', ratio='fill')
 
         is_empty = self.btree.root is None or not self.btree.root.keys
-        nodes = [] if is_empty else [self.btree.root]
+        idd = 1
+        nodes = [] if is_empty else [(self.btree.root, idd)]
 
         while nodes:
-            parent = nodes.pop(0)
+            parent, iid = nodes.pop(0)
             value = '|'.join(map(self.to_str, parent.keys))
 
-            dot_parent = pydot.Node(value, shape='square')
+            dot_parent = pydot.Node(iid, shape='square', label = value)
+
             graph.add_node(dot_parent)
 
             for child in [ch for ch in parent.sons if ch is not None]:
-                nodes.append(child)
+                idd+= 1
+                nodes.append((child, idd))
                 value = '|'.join(map(self.to_str, child.keys))
-
-                dot_node = pydot.Node(value, shape='square')
+                
+                dot_node = pydot.Node(idd, shape='square', label = value)
                 graph.add_node(dot_node)
 
                 graph.add_edge(pydot.Edge(dot_parent, dot_node))
